@@ -1,0 +1,12 @@
+server:
+  port: 6001
+dubbo:
+  application:
+    name: dubbo-provider
+  protocol:
+    port: 20880
+    serialization: fastjson
+  registry:
+    address: zookeeper://localhost:2181
+  scan:
+    base-packages: com.dfs.loong.namenode.server

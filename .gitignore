@@ -1,0 +1,4 @@
+# Project exclude paths
+/dfs-client/target/
+/dsf-namenode-api/target/
+/dsf-namenode-center/target/
