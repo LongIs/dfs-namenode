@@ -30,8 +30,8 @@ public class FSNamesystem {
 	 * @return 是否成功
 	 */
 	public Boolean mkdir(String path) {
-		this.directory.mkdir(path); 
-		this.editlog.logEdit("创建了一个目录：" + path);   
+		this.directory.mkdir(path);
+		this.editlog.logEdit("{'OP':'MKDIR','PATH':'" + path + "'}");
 		return true;
 	}
 

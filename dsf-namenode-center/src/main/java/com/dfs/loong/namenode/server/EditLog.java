@@ -1,10 +1,13 @@
 package com.dfs.loong.namenode.server;
 
+import lombok.Data;
+
 /**
  * 代表了一条edits log
  * @author zhonghuashishan
  *
  */
+@Data
 public class EditLog {
 
 	long txid;

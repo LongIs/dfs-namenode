@@ -17,6 +17,10 @@ public interface NameNodeFacade {
      */
     Boolean heartbeat(String ip, String hostname);
 
+    /**
+     * 创建文件夹
+     * @param path
+     */
     void mkdir(String path);
 
 }

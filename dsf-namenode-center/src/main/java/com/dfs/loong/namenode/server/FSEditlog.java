@@ -15,7 +15,7 @@ public class FSEditlog {
 	/**
 	 * 内存双缓冲区
 	 */
-	private DoubleBuffer doubleBuffer = new DoubleBuffer();
+	private final DoubleBuffer doubleBuffer = new DoubleBuffer();
 	/**
 	 * 当前是否在将内存缓冲刷入磁盘中
 	 */
