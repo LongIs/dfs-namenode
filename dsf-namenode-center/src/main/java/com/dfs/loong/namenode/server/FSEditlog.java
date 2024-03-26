@@ -1,6 +1,8 @@
 package com.dfs.loong.namenode.server;
 
 
+import com.dfs.loong.namenode.vo.EditLog;
+
 /**
  * 负责管理edits log日志的核心组件
  * @author zhonghuashishan
@@ -52,13 +54,13 @@ public class FSEditlog {
 			localTxid.set(txid); // 放到ThreadLocal里去，相当于就是维护了一份本地线程的副本
 			
 			// 构造一条edits log对象
-			EditLog log = new EditLog(txid, content); 
+			EditLog log = new EditLog(txid, content);
 			
 			// 将edits log写入内存缓冲中，不是直接刷入磁盘文件
 			doubleBuffer.write(log);
 
 			// 每次写一次 EditLog 后，检查这个缓冲区是否满了
-			if (doubleBuffer.shouldSynToDisk()) {
+			if (!doubleBuffer.shouldSynToDisk()) {
 				return;
 			}
 
@@ -66,7 +68,7 @@ public class FSEditlog {
 			isSchedulingSync = true;
 
 		}
-		
+
 		logSync();
 	}
 
@@ -149,9 +151,9 @@ public class FSEditlog {
 			notifyAll();
 		}
 	}
-	
 
-	
-
-	
+	public void flush() {
+		doubleBuffer.setReadyToSync();
+		doubleBuffer.flush();
+	}
 }

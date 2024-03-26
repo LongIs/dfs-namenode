@@ -1,5 +1,6 @@
-package com.dfs.loong.namenode.server;
+package com.dfs.loong.namenode.vo;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 /**
@@ -15,7 +16,11 @@ public class EditLog {
 
 	public EditLog(long txid, String content) {
 		this.txid = txid;
-		this.content = content;
+
+		JSONObject jsonObject = JSONObject.parseObject(content);
+		jsonObject.put("txid", txid);
+
+		this.content = jsonObject.toJSONString();
 	}
 
 }

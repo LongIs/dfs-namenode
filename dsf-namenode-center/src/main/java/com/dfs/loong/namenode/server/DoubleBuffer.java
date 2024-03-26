@@ -1,5 +1,7 @@
 package com.dfs.loong.namenode.server;
 
+import com.dfs.loong.namenode.vo.EditLog;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,6 +29,9 @@ public class DoubleBuffer {
 	 * 专门用来将数据同步到磁盘中去的一块缓冲
 	 */
 	private EditLogBuffer syncBuffer = new EditLogBuffer();
+
+	// 上一次flush到磁盘的时候他的最大的txid是多少
+	private long lastMaxTxid = 1L;
 
 	/**
 	 * 将edits log写到内存缓冲里去
@@ -74,9 +79,6 @@ public class DoubleBuffer {
 		// 当前这块缓冲区写入的最大的一个txid
 		long maxTxid = 0L;
 
-		// 上一次flush到磁盘的时候他的最大的txid是多少
-		long lastMaxTxid = 0L;
-
 		public EditLogBuffer() {
 			this.buffer = new ByteArrayOutputStream(EDIT_LOG_BUFFER_LIMIT * 2);
 		}
@@ -94,7 +96,7 @@ public class DoubleBuffer {
 				e.printStackTrace();
 			}
 
-			System.out.println("当前缓冲区的大小是：" + size());
+			System.out.println("当前缓冲区的大小是：" + size() +"，当前 txid = " + maxTxid);
 		}
 
 		/**
@@ -109,7 +111,7 @@ public class DoubleBuffer {
 			byte[] data = buffer.toByteArray();
 			ByteBuffer dataBuffer = ByteBuffer.wrap(data);
 
-			String editsLogFilePath = "/Users/xiongtaolong/Documents/dfs/" + (++lastMaxTxid) + "_" + maxTxid + ".log";
+			String editsLogFilePath = "/Users/xiongtaolong/Documents/dfs/" + (lastMaxTxid) + "_" + maxTxid + ".log";
 
 			/**
 			 * 需要注意的是，RandomAccessFile在这里并没有直接用于读写操作；相反，它是用来作为一个中介来创建FileOutputStream和FileChannel的。
@@ -169,11 +171,11 @@ public class DoubleBuffer {
 				}
 			}
 
-			this.lastMaxTxid = maxTxid;
+			lastMaxTxid = maxTxid;
 		}
 
 		/**
-		 * 清空掉内存缓冲里面的数据
+		 * 清空掉内存缓冲里面的数据，复位
 		 */
 		public void clear() {
 			buffer.reset();

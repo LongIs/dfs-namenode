@@ -1,5 +1,9 @@
 package com.dfs.loong.namenode.server;
 
+import com.dfs.loong.namenode.vo.EditLog;
+
+import java.util.List;
+
 public interface NameNodeFacade {
 
     /**
@@ -22,5 +26,13 @@ public interface NameNodeFacade {
      * @param path
      */
     void mkdir(String path);
+
+    /**
+     * 优雅关闭接口
+     */
+    void shutdownClose();
+
+
+    List<EditLog> fetchEditsLog();
 
 }

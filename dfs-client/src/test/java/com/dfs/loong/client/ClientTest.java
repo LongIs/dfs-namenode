@@ -16,7 +16,32 @@ public class ClientTest {
 
     @Test
     public void mkdir () {
-        fileSystem.mkdir("/user/xiongtaolong/one");
-        fileSystem.mkdir("/user/xiongtaolong/two");
+        for (int i = 0; i < 300; i++) {
+            int finalI = i;
+            Thread thread = new Thread(() -> {
+
+                for (int j = 0; j < 5; j++) {
+                    try {
+                        fileSystem.mkdir("/user/xiongtaolong/one" +j +"_" + finalI);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            thread.start();
+
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Test
+    public void shutdown() {
+        fileSystem.shutdown();
     }
 }

@@ -8,11 +8,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class FileSystemImpl implements FileSystem {
 
-    @Reference(timeout = 1000000)
+    @Reference
     private NameNodeFacade nameNodeFacade;
 
     @Override
     public void mkdir(String path) {
         nameNodeFacade.mkdir(path);
+    }
+
+    @Override
+    public void shutdown() {
+        nameNodeFacade.shutdownClose();
     }
 }

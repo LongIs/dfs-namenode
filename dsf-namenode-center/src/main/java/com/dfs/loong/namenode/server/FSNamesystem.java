@@ -35,4 +35,8 @@ public class FSNamesystem {
 		return true;
 	}
 
+	public void shutdown() {
+		editlog.flush();
+	}
+
 }

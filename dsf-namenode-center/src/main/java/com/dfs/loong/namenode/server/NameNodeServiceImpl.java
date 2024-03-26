@@ -1,8 +1,11 @@
 package com.dfs.loong.namenode.server;
 
+import com.dfs.loong.namenode.vo.EditLog;
 import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * NameNode的rpc服务的接口
@@ -33,6 +36,16 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	@Override
 	public void mkdir(String path){
 		this.namesystem.mkdir(path);
+	}
+
+	@Override
+	public void shutdownClose() {
+		this.namesystem.shutdown();
+	}
+
+	@Override
+	public List<EditLog> fetchEditsLog() {
+		return null;
 	}
 
 	/**
