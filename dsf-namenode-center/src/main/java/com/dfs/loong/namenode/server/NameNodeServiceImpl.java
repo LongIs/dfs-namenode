@@ -1,6 +1,7 @@
 package com.dfs.loong.namenode.server;
 
 import com.dfs.loong.namenode.vo.EditLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import java.util.List;
  */
 @Component
 @Service(interfaceClass=NameNodeFacade.class)
+@Slf4j
 public class NameNodeServiceImpl implements NameNodeFacade {
 
 	/**
@@ -27,7 +29,9 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	 */
 	@Autowired
 	private DataNodeManager datanodeManager;
-	
+
+	private Boolean isRunning = true;
+
 	/**
 	 * 创建目录
 	 * @param path 目录路径
@@ -35,11 +39,16 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	 */
 	@Override
 	public void mkdir(String path){
-		this.namesystem.mkdir(path);
+		if (isRunning) {
+			this.namesystem.mkdir(path);
+			return;
+		}
+		log.info("程序正在关闭，不再写入数据。。");
 	}
 
 	@Override
 	public void shutdownClose() {
+		isRunning = false;
 		this.namesystem.shutdown();
 	}
 
