@@ -1,6 +1,5 @@
-package com.dfs.loong.namenode.server;
+package com.dfs.loong.server;
 
-import com.dfs.loong.namenode.vo.EditLog;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,14 +14,10 @@ public class FSNamesystem {
 	 * 负责管理内存文件目录树的组件
 	 */
 	private FSDirectory directory;
-	/**
-	 * 负责管理edits log写入磁盘的组件
-	 */
-	private FSEditlog editLog;
-	
+
+
 	public FSNamesystem() {
 		this.directory = new FSDirectory();
-		this.editLog = new FSEditlog();
 	}
 	
 	/**
@@ -32,16 +27,7 @@ public class FSNamesystem {
 	 */
 	public Boolean mkdir(String path) {
 		this.directory.mkdir(path);
-		this.editLog.logEdit("{'OP':'MKDIR','PATH':'" + path + "'}");
 		return true;
-	}
-
-	public void shutdown() {
-		editLog.flush();
-	}
-
-	public FSEditlog getEditLog() {
-		return editLog;
 	}
 
 }

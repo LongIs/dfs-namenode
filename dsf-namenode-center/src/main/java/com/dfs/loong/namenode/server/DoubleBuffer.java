@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 内存双缓冲
@@ -32,6 +34,11 @@ public class DoubleBuffer {
 
 	// 上一次flush到磁盘的时候他的最大的txid是多少
 	private long lastMaxTxid = 1L;
+
+	/**
+	 * 已经输入磁盘中的txid范围
+	 */
+	private List<String> flushedTxids = new ArrayList<>();
 
 	/**
 	 * 将edits log写到内存缓冲里去
@@ -66,6 +73,18 @@ public class DoubleBuffer {
 			return true;
 		}
 		return false;
+	}
+
+	public List<String> getFlushedTxids() {
+		return flushedTxids;
+	}
+
+	public String[] getBufferedEditsLog() {
+		if (currentBuffer.size() == 0) {
+			return null;
+		}
+		String editsLogRawData = new String(currentBuffer.getBufferData());
+		return editsLogRawData.split("\n");
 	}
 
 	/**
@@ -112,6 +131,8 @@ public class DoubleBuffer {
 			ByteBuffer dataBuffer = ByteBuffer.wrap(data);
 
 			String editsLogFilePath = "/Users/xiongtaolong/Documents/dfs/" + (lastMaxTxid) + "_" + maxTxid + ".log";
+
+			flushedTxids.add(lastMaxTxid +"_"+ maxTxid);
 
 			/**
 			 * 需要注意的是，RandomAccessFile在这里并没有直接用于读写操作；相反，它是用来作为一个中介来创建FileOutputStream和FileChannel的。
@@ -179,6 +200,10 @@ public class DoubleBuffer {
 		 */
 		public void clear() {
 			buffer.reset();
+		}
+
+		public byte[] getBufferData() {
+			return buffer.toByteArray();
 		}
 	}
 }

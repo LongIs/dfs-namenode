@@ -12,6 +12,7 @@
         <module>dsf-namenode-api</module>
         <module>dsf-namenode-center</module>
         <module>dfs-client</module>
+        <module>dfs-backupnode</module>
     </modules>
 
     <dependencies>
@@ -75,6 +76,12 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.16.20</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
         </dependency>
 
     </dependencies>

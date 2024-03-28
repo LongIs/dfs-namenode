@@ -3,6 +3,8 @@ package com.dfs.loong.namenode.server;
 
 import com.dfs.loong.namenode.vo.EditLog;
 
+import java.util.List;
+
 /**
  * 负责管理edits log日志的核心组件
  * @author zhonghuashishan
@@ -38,7 +40,7 @@ public class FSEditlog {
 	// 就会导致说，对一个共享的map数据结构出现多线程并发的读写的问题
 	// 此时对这个map的读写是不是就需要加锁了
 //	private Map<Thread, Long> txidMap = new HashMap<Thread, Long>();
-	
+
 	/**
 	 * 记录edits log日志
 	 */
@@ -155,5 +157,27 @@ public class FSEditlog {
 	public void flush() {
 		doubleBuffer.setReadyToSync();
 		doubleBuffer.flush();
+	}
+
+	/**
+	 * 获取已经刷入磁盘的 EditsLog 数据
+	 * @return
+	 */
+	public List<String> getFlushedTxIds() {
+		synchronized(this) {
+			return doubleBuffer.getFlushedTxids();
+		}
+	}
+
+	/**
+	 * 获取当前缓冲区的数据
+	 * @return
+	 */
+	public String[] getBufferedEditsLog() {
+		synchronized(this) { // 这边此时只要获取到了锁，那么就意味着
+			// 肯定没有人当前在修改这个内存数据了
+			// 此时拉取就肯定可以获取到当前完整的内存缓冲里的数据
+			return doubleBuffer.getBufferedEditsLog();
+		}
 	}
 }
