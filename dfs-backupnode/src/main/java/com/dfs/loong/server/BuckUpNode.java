@@ -2,6 +2,7 @@ package com.dfs.loong.server;
 
 import com.dfs.loong.rpc.NameNodeRpc;
 import com.dfs.loong.task.EditsLogFetcher;
+import com.dfs.loong.task.FSImageCheckPoint;
 import jdk.nashorn.internal.ir.annotations.Reference;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class BuckUpNode implements InitializingBean {
     public void afterPropertiesSet() {
         EditsLogFetcher editsLogFetcher = new EditsLogFetcher(this, nameNodeRpc, fsNamesystem);
         editsLogFetcher.start();
+
+        FSImageCheckPoint fsImageCheckPoint = new FSImageCheckPoint(this, nameNodeRpc, fsNamesystem);
+        fsImageCheckPoint.start();
     }
 
     public Boolean isRunning() {

@@ -1,5 +1,6 @@
 package com.dfs.loong.server;
 
+import com.dfs.loong.dto.FSImageDTO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,9 +26,13 @@ public class FSNamesystem {
 	 * @param path 目录路径
 	 * @return 是否成功
 	 */
-	public Boolean mkdir(String path) {
-		this.directory.mkdir(path);
+	public Boolean mkdir(long txid, String path) {
+		this.directory.mkdir(txid, path);
 		return true;
+	}
+
+	public FSImageDTO getFSImageByJson() {
+		return this.directory.getFSImageByJson();
 	}
 
 }

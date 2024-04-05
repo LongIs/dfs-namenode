@@ -27,7 +27,7 @@ public class EditsLogFetcher extends Thread {
         while (buckUpNode.isRunning()) {
             List<EditLog> editLogs = nameNodeRpc.fetchEditsLog();
             for (EditLog editLog : editLogs) {
-                fsNamesystem.mkdir(JSON.toJSONString(editLog));
+                fsNamesystem.mkdir(editLog.getTxid(), JSON.toJSONString(editLog));
             }
         }
     }
