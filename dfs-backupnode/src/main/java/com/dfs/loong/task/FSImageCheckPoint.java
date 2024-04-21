@@ -3,7 +3,9 @@ package com.dfs.loong.task;
 import com.dfs.loong.dto.FSImageDTO;
 import com.dfs.loong.rpc.NameNodeRpc;
 import com.dfs.loong.server.BuckUpNode;
+import com.dfs.loong.server.FSImageUploader;
 import com.dfs.loong.server.FSNamesystem;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,7 +20,7 @@ public class FSImageCheckPoint extends Thread{
     NameNodeRpc nameNodeRpc;
     FSNamesystem fsNamesystem;
 
-    private String lastEditsLogFilePath = "";
+    private String lastEditsLogFilePath;
 
     public FSImageCheckPoint(BuckUpNode buckUpNode, NameNodeRpc nameNodeRpc, FSNamesystem fsNamesystem) {
         this.buckUpNode = buckUpNode;
@@ -34,9 +36,7 @@ public class FSImageCheckPoint extends Thread{
             try {
                 Thread.sleep(1000);
 
-                FSImageDTO fsImageByJson = fsNamesystem.getFSImageByJson();
-                deleteLastFSImageFile();
-                doCheckPoint(fsImageByJson);
+                doCheckpoint();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -44,16 +44,34 @@ public class FSImageCheckPoint extends Thread{
         }
     }
 
-    private void deleteLastFSImageFile() {
-        File file = new File(lastEditsLogFilePath);
-        if (file.exists()) {
-            file.delete();
+    /**
+     * 将fsiamge持久化到磁盘上去
+     */
+    private void doCheckpoint() {
+        FSImageDTO fsImageDTO = fsNamesystem.getFSImageByJson();
+        removeLastFSImageFile();
+        writeFSImageFile(fsImageDTO);
+        uploadFSImageFile(fsImageDTO);
+    }
+
+    /**
+     * 删除上一个fsimage磁盘文件
+     */
+    private void removeLastFSImageFile() {
+        if (StringUtils.isNotBlank(lastEditsLogFilePath)) {
+            File file = new File(lastEditsLogFilePath);
+            if(file.exists()) {
+                file.delete();
+            }
         }
     }
 
-    public void doCheckPoint(FSImageDTO fsImageByJson) {
-        ByteBuffer dataBuffer = ByteBuffer.wrap(fsImageByJson.getFSImageData().getBytes());
-        String editsLogFilePath = "/Users/xiongtaolong/Documents/dfs/" + fsImageByJson.getMaxTxId() + ".mata";
+    /**
+     * 写入最新的fsimage文件
+     */
+    private void writeFSImageFile(FSImageDTO fsImageDTO) {
+        ByteBuffer dataBuffer = ByteBuffer.wrap(fsImageDTO.getFSImageData().getBytes());
+        String editsLogFilePath = "/Users/xiongtaolong/Documents/dfs/" + fsImageDTO.getMaxTxId() + ".mata";
 
         lastEditsLogFilePath = editsLogFilePath;
 
@@ -86,5 +104,14 @@ public class FSImageCheckPoint extends Thread{
                 e.printStackTrace();
             }
         }
+    }
+
+
+    /**
+     * 上传fsimage文件
+     */
+    private void uploadFSImageFile(FSImageDTO fsImageDTO) {
+        FSImageUploader fsimageUploader = new FSImageUploader(fsImageDTO);
+        fsimageUploader.start();
     }
 }
