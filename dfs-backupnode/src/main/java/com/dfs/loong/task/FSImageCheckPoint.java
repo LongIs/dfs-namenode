@@ -52,6 +52,15 @@ public class FSImageCheckPoint extends Thread{
         removeLastFSImageFile();
         writeFSImageFile(fsImageDTO);
         uploadFSImageFile(fsImageDTO);
+        updateCheckpointTxid(fsImageDTO);
+    }
+
+    /**
+     * 更新checkpoint txid
+     * @param fsimage
+     */
+    private void updateCheckpointTxid(FSImageDTO fsimage) {
+        nameNodeRpc.updateCheckpointTxid(fsimage.getMaxTxId());
     }
 
     /**

@@ -17,4 +17,8 @@ public class NameNodeRpc {
     public List<EditLog> fetchEditsLog() {
         return nameNodeFacade.fetchEditsLog();
     }
+
+    public void updateCheckpointTxid(Long maxTxId) {
+        nameNodeFacade.updateCheckpointTxid(maxTxId);
+    }
 }

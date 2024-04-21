@@ -35,4 +35,5 @@ public interface NameNodeFacade {
 
     List<EditLog> fetchEditsLog();
 
+    void updateCheckpointTxid(Long maxTxId);
 }

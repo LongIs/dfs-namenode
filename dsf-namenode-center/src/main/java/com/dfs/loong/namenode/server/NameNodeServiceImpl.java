@@ -1,6 +1,5 @@
 package com.dfs.loong.namenode.server;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dfs.loong.namenode.vo.EditLog;
 import lombok.extern.slf4j.Slf4j;
@@ -130,6 +129,11 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 			}
 		}
 		return editLogList;
+	}
+
+	@Override
+	public void updateCheckpointTxid(Long maxTxId) {
+		namesystem.setCheckpointTxid(maxTxId);
 	}
 
 	/**
