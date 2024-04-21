@@ -2,7 +2,9 @@ package com.dfs.loong.namenode.server;
 
 
 import com.dfs.loong.namenode.vo.EditLog;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -11,6 +13,11 @@ import java.util.List;
  *
  */
 public class FSEditlog {
+
+	/**
+	 * editlog日志文件清理的时间间隔
+	 */
+	private static final Long EDIT_LOG_CLEAN_INTERVAL = 30 * 1000L;
 
 	/**
 	 * 当前递增到的txid的序号
@@ -40,6 +47,12 @@ public class FSEditlog {
 	// 就会导致说，对一个共享的map数据结构出现多线程并发的读写的问题
 	// 此时对这个map的读写是不是就需要加锁了
 //	private Map<Thread, Long> txidMap = new HashMap<Thread, Long>();
+
+	/**
+	 * 元数据管理组件
+	 */
+	@Autowired
+	private FSNamesystem namesystem;
 
 	/**
 	 * 记录edits log日志
@@ -179,5 +192,55 @@ public class FSEditlog {
 			// 此时拉取就肯定可以获取到当前完整的内存缓冲里的数据
 			return doubleBuffer.getBufferedEditsLog();
 		}
+	}
+
+	/**
+	 * 获取已经刷入磁盘的editslog数据
+	 * @return
+	 */
+	public List<String> getFlushedTxids() {
+		return doubleBuffer.getFlushedTxids();
+	}
+
+	/**
+	 * 自动清理editlog文件
+	 * @author zhonghuashishan
+	 *
+	 */
+	class EditLogCleaner extends Thread {
+
+		@Override
+		public void run() {
+			System.out.println("editlog日志文件后台清理线程启动......");
+
+			while(true) {
+				try {
+					Thread.sleep(EDIT_LOG_CLEAN_INTERVAL);
+
+					List<String> flushedTxids = getFlushedTxids();
+					if(flushedTxids != null && flushedTxids.size() > 0) {
+						long checkpointTxid = namesystem.getCheckpointTxid();
+
+						for(String flushedTxid : flushedTxids) {
+							long startTxid = Long.valueOf(flushedTxid.split("_")[0]);
+							long endTxid = Long.valueOf(flushedTxid.split("_")[1]);
+
+							if(checkpointTxid >= endTxid) {
+								// 此时就要删除这个文件
+								File file = new File("/Users/xiongtaolong/Documents/dfs/" + (startTxid) + "_" + endTxid + ".log");
+
+								if(file.exists()) {
+									file.delete();
+									System.out.println("发现editlog日志文件不需要，进行删除：" + file.getPath());
+								}
+							}
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
 	}
 }
