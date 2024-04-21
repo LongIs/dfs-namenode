@@ -1,7 +1,9 @@
 package com.dfs.loong.namenode.server;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dfs.loong.namenode.vo.EditLog;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.dubbo.config.annotation.Service;
@@ -74,10 +76,15 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	public void shutdownClose() {
 		isRunning = false;
 		this.namesystem.shutdown();
+		this.namesystem.saveCheckpointTxid();
 	}
 
 	@Override
 	public List<EditLog> fetchEditsLog() {
+		if(!isRunning) {
+
+			return Lists.newArrayList();
+		}
 		List<String> flushedTxIds = namesystem.getEditLog().getFlushedTxIds();
 		List<EditLog> editLogList = new ArrayList<>();
 

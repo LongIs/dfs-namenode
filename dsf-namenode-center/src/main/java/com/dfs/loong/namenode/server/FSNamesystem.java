@@ -3,6 +3,12 @@ package com.dfs.loong.namenode.server;
 import com.dfs.loong.namenode.vo.EditLog;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
 /**
  * 负责管理元数据的核心组件
  * @author zhonghuashishan
@@ -56,5 +62,48 @@ public class FSNamesystem {
 
 	public long getCheckpointTxid() {
 		return checkpointTxid;
+	}
+
+	/**
+	 * 将checkpoint txid保存到磁盘上去
+	 */
+	public void saveCheckpointTxid() {
+		String path = "/Users/xiongtaolong/Documents/dfs/checkpoint-txid.meta";
+
+		RandomAccessFile raf = null;
+		FileOutputStream out = null;
+		FileChannel channel = null;
+
+		try {
+			File file = new File(path);
+			if(file.exists()) {
+				file.delete();
+			}
+
+			ByteBuffer buffer = ByteBuffer.wrap(String.valueOf(checkpointTxid).getBytes());
+
+			raf = new RandomAccessFile(path, "rw");
+			out = new FileOutputStream(raf.getFD());
+			channel = out.getChannel();
+
+			channel.write(buffer);
+			channel.force(false);
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(out != null) {
+					out.close();
+				}
+				if(raf != null) {
+					raf.close();
+				}
+				if(channel != null) {
+					channel.close();
+				}
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}
 	}
 }
