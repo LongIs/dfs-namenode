@@ -13,7 +13,7 @@ public class FSDirectory {
 	/**
 	 * 内存中的文件目录树
 	 */
-	private final INodeDirectory dirTree;
+	private INodeDirectory dirTree;
 
 	// 他就是一个父子层级关系的数据结构，文件目录树
 	// 创建目录，删除目录，重命名目录，创建文件，删除文件，重命名文件
@@ -82,8 +82,16 @@ public class FSDirectory {
 		
 		return null;
 	}
-	
-	
+
+	public INodeDirectory getDirTree() {
+		return dirTree;
+	}
+
+	public void setDirTree(INodeDirectory dirTree) {
+		this.dirTree = dirTree;
+	}
+
+
 	/**
 	 * 代表的是文件目录树中的一个节点
 	 * @author zhonghuashishan

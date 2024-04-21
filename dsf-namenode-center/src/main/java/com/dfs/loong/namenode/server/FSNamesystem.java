@@ -1,9 +1,11 @@
 package com.dfs.loong.namenode.server;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dfs.loong.namenode.vo.EditLog;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -62,6 +64,46 @@ public class FSNamesystem {
 
 	public long getCheckpointTxid() {
 		return checkpointTxid;
+	}
+
+	/**
+	 * 恢复元数据
+	 */
+	public void recoverNamespace() {
+		try {
+			loadFSImage();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 加载fsimage文件到内存里来进行恢复
+	 */
+	private void loadFSImage() throws Exception {
+		FileInputStream in = null;
+		FileChannel channel = null;
+		try {
+			in = new FileInputStream("/Users/xiongtaolong/Documents/dfs/fsimage.meta");
+			channel = in.getChannel();
+
+			ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024); // 这个参数是可以动态调节的
+			// 每次你接受到一个fsimage文件的时候记录一下他的大小，持久化到磁盘上去
+			// 每次重启就分配对应空间的大小就可以了
+			int count = channel.read(buffer);
+
+			buffer.flip();
+			String fsimageJson = new String(buffer.array(), 0, count);
+			FSDirectory.INodeDirectory dirTree = JSONObject.parseObject(fsimageJson, FSDirectory.INodeDirectory.class);
+			directory.setDirTree(dirTree);
+		} finally {
+			if(in != null) {
+				in.close();
+			}
+			if(channel != null) {
+				channel.close();
+			}
+		}
 	}
 
 	/**
