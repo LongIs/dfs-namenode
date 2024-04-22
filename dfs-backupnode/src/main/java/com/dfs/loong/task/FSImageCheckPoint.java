@@ -22,6 +22,10 @@ public class FSImageCheckPoint extends Thread{
 
     private String lastEditsLogFilePath;
 
+    private String lastFsimageFile = "";
+
+    private long checkpointTime = System.currentTimeMillis();
+
     public FSImageCheckPoint(BuckUpNode buckUpNode, NameNodeRpc nameNodeRpc, FSNamesystem fsNamesystem) {
         this.buckUpNode = buckUpNode;
         this.nameNodeRpc = nameNodeRpc;
@@ -53,6 +57,56 @@ public class FSImageCheckPoint extends Thread{
         writeFSImageFile(fsImageDTO);
         uploadFSImageFile(fsImageDTO);
         updateCheckpointTxid(fsImageDTO);
+        saveCheckpointInfo(fsImageDTO);
+    }
+
+    /**
+     * 持久化checkpoint信息
+     * @param fsImageDTO
+     */
+    private void saveCheckpointInfo(FSImageDTO fsImageDTO) {
+        String path = "/Users/xiongtaolong/Documents/dfs/backupnode/checkpoint-info.meta";
+
+        RandomAccessFile raf = null;
+        FileOutputStream out = null;
+        FileChannel channel = null;
+
+        try {
+            File file = new File(path);
+            if(file.exists()) {
+                file.delete();
+            }
+
+            long now = System.currentTimeMillis();
+            this.checkpointTime = now;
+            long checkpointTxid = fsImageDTO.getMaxTxId();
+            ByteBuffer buffer = ByteBuffer.wrap(String.valueOf(now + "_" + checkpointTxid + "_" + lastFsimageFile).getBytes());
+
+            raf = new RandomAccessFile(path, "rw");
+            out = new FileOutputStream(raf.getFD());
+            channel = out.getChannel();
+
+            channel.write(buffer);
+            channel.force(false);
+
+            System.out.println("checkpoint信息持久化到磁盘文件......");
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if(out != null) {
+                    out.close();
+                }
+                if(raf != null) {
+                    raf.close();
+                }
+                if(channel != null) {
+                    channel.close();
+                }
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
     }
 
     /**
