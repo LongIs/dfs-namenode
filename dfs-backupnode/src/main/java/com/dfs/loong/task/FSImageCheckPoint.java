@@ -5,6 +5,7 @@ import com.dfs.loong.rpc.NameNodeRpc;
 import com.dfs.loong.server.BuckUpNode;
 import com.dfs.loong.server.FSImageUploader;
 import com.dfs.loong.server.FSNamesystem;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -13,8 +14,13 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
+@Slf4j
 public class FSImageCheckPoint extends Thread{
 
+    /**
+     * checkpoint操作的时间间隔
+     */
+    public static final Integer CHECKPOINT_INTERVAL = 60 * 1000;
 
     BuckUpNode buckUpNode;
     NameNodeRpc nameNodeRpc;
@@ -38,7 +44,22 @@ public class FSImageCheckPoint extends Thread{
 
         while (buckUpNode.isRunning()) {
             try {
-                Thread.sleep(1000);
+                if (!fsNamesystem.isFinishedRecover()) {
+                    Thread.sleep(1000L);
+                    continue;
+                }
+
+                if (lastFsimageFile.equals("")) {
+                    this.lastFsimageFile = fsNamesystem.getCheckpointFile();
+                }
+
+                long now = System.currentTimeMillis();
+                if(now - checkpointTime > CHECKPOINT_INTERVAL) {
+                    if (!nameNodeRpc.isNamenodeRunning()) {
+                        log.info("nameNode 当前无法访问， 不执行 Checkpoint");
+                        continue;
+                    }
+                }
 
                 doCheckpoint();
 
