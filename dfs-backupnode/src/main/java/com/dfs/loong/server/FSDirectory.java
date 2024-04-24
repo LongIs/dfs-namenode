@@ -17,9 +17,9 @@ public class FSDirectory {
 	/**
 	 * 内存中的文件目录树
 	 */
-	private final INodeDirectory dirTree;
+	private INodeDirectory dirTree;
 
-	private Long txid;
+	private Long maxTxid;
 
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -39,7 +39,7 @@ public class FSDirectory {
 		try {
 			lock.readLock().lock();;
 			FSImageDTO dto = new FSImageDTO();
-			dto.setMaxTxId(txid);
+			dto.setMaxTxId(maxTxid);
 			dto.setFSImageData(JSON.toJSONString(dirTree));
 			return dto;
 		} finally {
@@ -62,7 +62,7 @@ public class FSDirectory {
 		try {
 			lock.writeLock().lock();
 
-			this.txid = txid;
+			this.maxTxid = txid;
 
 			String[] pathes = path.split("/");
 			INodeDirectory parent = dirTree;
@@ -110,8 +110,24 @@ public class FSDirectory {
 		
 		return null;
 	}
-	
-	
+
+	public Long getMaxTxid() {
+		return maxTxid;
+	}
+
+	public void setMaxTxid(Long txid) {
+		this.maxTxid = txid;
+	}
+
+	public INodeDirectory getDirTree() {
+		return dirTree;
+	}
+
+	public void setDirTree(INodeDirectory dirTree) {
+		this.dirTree = dirTree;
+	}
+
+
 	/**
 	 * 代表的是文件目录树中的一个节点
 	 * @author zhonghuashishan
