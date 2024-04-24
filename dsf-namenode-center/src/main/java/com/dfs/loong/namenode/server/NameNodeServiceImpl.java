@@ -44,11 +44,6 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	private Boolean isRunning = true;
 
 	/**
-	 * 当前backupNode节点同步到了哪一条txid了
-	 */
-	private long syncedTxid = 0L;
-
-	/**
 	 * 当前缓冲的一小部分editslog
 	 */
 	private List<EditLog> currentBufferedEditsLog = new ArrayList<>();
@@ -57,6 +52,11 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	 * 当前内存里缓冲了哪个磁盘文件的数据
 	 */
 	private String bufferedFlushedTxid;
+
+	/**
+	 * 当前缓存里的editslog最大的一个txid
+	 */
+	private long currentBufferedMaxTxid = 0L;
 
 	/**
 	 * 创建目录
@@ -80,7 +80,7 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	}
 
 	@Override
-	public List<EditLog> fetchEditsLog() {
+	public List<EditLog> fetchEditsLog(long syncedTxid) {
 		if(!isRunning) {
 
 			return Lists.newArrayList();
@@ -90,7 +90,7 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 
 		// 如果此时 还没有刷出来任何磁盘文件的话，那么此时数据仅仅存在于内存缓冲中
 		if (CollectionUtils.isEmpty(flushedTxIds)) {
-			fetchFromBufferedEditsLog(editLogList);
+			fetchFromBufferedEditsLog(syncedTxid, editLogList);
 		}
 		// 如果此时发现已经有落地磁盘的文件了，这个时候就要扫描所有的磁盘文件的索引范围
 		else {
@@ -98,19 +98,19 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 			// 有磁盘文件，而且内存里还缓存了某个磁盘文件的数据了
 			if (bufferedFlushedTxid != null) {
 				// 如果要拉取的数据就在当前缓存的磁盘文件数据里
-				if (existInFlushedFile(bufferedFlushedTxid)) {
-					fetchFromCurrentBuffer(editLogList);
+				if (existInFlushedFile(syncedTxid, bufferedFlushedTxid)) {
+					fetchFromCurrentBuffer(syncedTxid, editLogList);
 				}
 				// 如果要拉取的数据不在当前缓存的磁盘文件数据里了，那么需要从下一个磁盘文件去拉取
 				else {
 					String nextFlushedTxid = getNextFlushedTxid(flushedTxIds, bufferedFlushedTxid);
 					// 如果可以找到下一个磁盘文件，那么就从下一个磁盘文件里开始读取数据
 					if (StringUtils.isNotBlank(nextFlushedTxid)) {
-						fetchFromFlushedFile(nextFlushedTxid, editLogList);
+						fetchFromFlushedFile(syncedTxid, nextFlushedTxid, editLogList);
 					}
 					// 如果没有找到下一个文件，此时就需要从内存里去继续读取
 					else {
-						fetchFromBufferedEditsLog(editLogList);
+						fetchFromBufferedEditsLog(syncedTxid, editLogList);
 					}
 				}
 			} else {
@@ -119,10 +119,10 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 
 				for(String flushedTxid : flushedTxIds) {
 					// 如果要拉取的下一条数据就是在某个磁盘文件里
-					if(existInFlushedFile(flushedTxid)) {
+					if(existInFlushedFile(syncedTxid, flushedTxid)) {
 						// 此时可以把这个磁盘文件里以及下一个磁盘文件的的数据都读取出来，放到内存里来缓存
 						// 就怕一个磁盘文件的数据不足够10条
-						fetchFromFlushedFile(flushedTxid, editLogList);
+						fetchFromFlushedFile(syncedTxid, flushedTxid, editLogList);
 						fechedFromFlushedFile = true;
 						break;
 					}
@@ -131,7 +131,7 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 				// 第二种情况，你要拉取的txid已经比磁盘文件里的全部都新了，还在内存缓冲里
 				// 如果没有找到下一个文件，此时就需要从内存里去继续读取
 				if(!fechedFromFlushedFile) {
-					fetchFromBufferedEditsLog(editLogList);
+					fetchFromBufferedEditsLog(syncedTxid, editLogList);
 				}
 			}
 		}
@@ -147,7 +147,7 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	 * 从已经刷入磁盘的文件里读取editslog，同时缓存这个文件数据到内存
 	 * @param flushedTxid
 	 */
-	private void fetchFromFlushedFile(String flushedTxid, List<EditLog> fetchedEditsLog) {
+	private void fetchFromFlushedFile(long syncedTxid, String flushedTxid, List<EditLog> fetchedEditsLog) {
 		try {
 			String[] flushedTxidSplited = flushedTxid.split("_");
 			long startTxid = Long.parseLong(flushedTxidSplited[0]);
@@ -164,7 +164,7 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 			}
 			bufferedFlushedTxid = flushedTxid; // 缓存了某个刷入磁盘文件的数据
 
-			fetchFromCurrentBuffer(fetchedEditsLog);
+			fetchFromCurrentBuffer(syncedTxid, fetchedEditsLog);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -187,7 +187,7 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 		return null;
 	}
 
-	private boolean existInFlushedFile(String flushedTxid) {
+	private boolean existInFlushedFile(long syncedTxid, String flushedTxid) {
 		String[] flushedTxidSplited = flushedTxid.split("_");
 
 		long startTxid = Long.valueOf(flushedTxidSplited[0]);
@@ -205,7 +205,14 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	 * 就是从内存缓冲的editslog中拉取数据
 	 * @param editLogList
 	 */
-	private void fetchFromBufferedEditsLog(List<EditLog> editLogList) {
+	private void fetchFromBufferedEditsLog(long syncedTxid, List<EditLog> editLogList) {
+		long fetchTxid = syncedTxid + 1;
+		if(fetchTxid <= currentBufferedMaxTxid) {
+			System.out.println("尝试从内存缓冲拉取的时候，发现上一次内存缓存有数据可供拉取......");
+			fetchFromCurrentBuffer(syncedTxid, editLogList);
+			return;
+		}
+
 		currentBufferedEditsLog.clear();
 
 		String[] bufferedEditsLog = namesystem.getEditLog().getBufferedEditsLog();
@@ -218,14 +225,14 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 		}
 		bufferedFlushedTxid = null;
 
-		fetchFromCurrentBuffer(editLogList);
+		fetchFromCurrentBuffer(syncedTxid, editLogList);
 	}
 
 	/**
 	 * 从当前已经在内存里缓存的数据中拉取editslog
 	 * @param editLogList
 	 */
-	private void fetchFromCurrentBuffer(List<EditLog> editLogList) {
+	private void fetchFromCurrentBuffer(long syncedTxid, List<EditLog> editLogList) {
 		int fetchCount = 0;
 		for (EditLog editLog : currentBufferedEditsLog) {
 			if (editLog.getTxid() == syncedTxid + 1) {

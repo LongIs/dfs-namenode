@@ -13,12 +13,20 @@ public class NameNodeRpc {
     @Reference
     private NameNodeFacade nameNodeFacade;
 
+    private Boolean isNamenodeRunning = true;
 
-    public List<EditLog> fetchEditsLog() {
-        return nameNodeFacade.fetchEditsLog();
+    public List<EditLog> fetchEditsLog(long syncedTxid) {
+        return nameNodeFacade.fetchEditsLog(syncedTxid);
     }
 
     public void updateCheckpointTxid(Long maxTxId) {
         nameNodeFacade.updateCheckpointTxid(maxTxId);
+    }
+
+    public Boolean isNamenodeRunning() {
+        return isNamenodeRunning;
+    }
+    public void setIsNamenodeRunning(Boolean isNamenodeRunning) {
+        this.isNamenodeRunning = isNamenodeRunning;
     }
 }

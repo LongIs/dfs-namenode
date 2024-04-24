@@ -55,7 +55,7 @@ public class FSNamesystem {
 		try {
 			loadCheckpointInfo();
 			loadFSImage();
-
+			finishedRecover = true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -146,4 +146,35 @@ public class FSNamesystem {
 		}
 	}
 
+	public long getCheckpointTime() {
+		return checkpointTime;
+	}
+
+	public void setCheckpointTime(long checkpointTime) {
+		this.checkpointTime = checkpointTime;
+	}
+
+	public String getCheckpointFile() {
+		return checkpointFile;
+	}
+
+	public void setCheckpointFile(String checkpointFile) {
+		this.checkpointFile = checkpointFile;
+	}
+
+	public boolean isFinishedRecover() {
+		return finishedRecover;
+	}
+
+	public void setFinishedRecover(boolean finishedRecover) {
+		this.finishedRecover = finishedRecover;
+	}
+
+	/**
+	 * 获取当前同步到的最大的txid
+	 * @return
+	 */
+	public long getSyncedTxid() {
+		return directory.getFSImageByJson().getMaxTxId();
+	}
 }

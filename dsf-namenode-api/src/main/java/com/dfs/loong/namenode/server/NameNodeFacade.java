@@ -33,7 +33,7 @@ public interface NameNodeFacade {
     void shutdownClose();
 
 
-    List<EditLog> fetchEditsLog();
+    List<EditLog> fetchEditsLog(long syncedTxid);
 
     void updateCheckpointTxid(Long maxTxId);
 }

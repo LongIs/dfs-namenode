@@ -23,4 +23,9 @@ public class EditLog {
 		this.content = jsonObject.toJSONString();
 	}
 
+	public String get(String key) {
+		JSONObject jsonObject = JSONObject.parseObject(content);
+		return jsonObject.getString(key);
+	}
+
 }
