@@ -1,7 +1,6 @@
 package com.dfs.loong.namenode.server;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dfs.loong.namenode.vo.EditLog;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -52,6 +51,14 @@ public class FSNamesystem {
 
 	public void shutdown() {
 		editLog.flush();
+	}
+
+	public Boolean create(String fileName) {
+		if (!directory.create(fileName)) {
+			return false;
+		}
+		editLog.logEdit("{'OP':'CREATE','PATH':'" + fileName + "'}");
+		return true;
 	}
 
 	public FSEditlog getEditLog() {
@@ -131,6 +138,13 @@ public class FSNamesystem {
 								String path = editLog.getString("PATH");
 								try {
 									directory.mkdir(path);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							} else if(op.equals("CREATE")) {
+								String filename = editLog.getString("PATH");
+								try {
+									directory.create(filename);
 								} catch (Exception e) {
 									e.printStackTrace();
 								}

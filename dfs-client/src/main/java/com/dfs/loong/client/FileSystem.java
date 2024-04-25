@@ -7,5 +7,16 @@ public interface FileSystem {
      */
     void mkdir(String path);
 
+    /**
+     * 优雅关闭
+     */
     void shutdown();
+
+    /**
+     * 上传文件
+     * @param file
+     * @param fileName
+     * @throws Exception
+     */
+    void upload(byte[] file, String fileName) throws Exception;
 }

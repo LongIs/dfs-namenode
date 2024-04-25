@@ -36,4 +36,6 @@ public interface NameNodeFacade {
     List<EditLog> fetchEditsLog(long syncedTxid);
 
     void updateCheckpointTxid(Long maxTxId);
+
+    void create(byte[] file, String fileName);
 }

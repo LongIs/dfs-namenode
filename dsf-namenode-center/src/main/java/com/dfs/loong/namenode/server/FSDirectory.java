@@ -91,6 +91,61 @@ public class FSDirectory {
 		this.dirTree = dirTree;
 	}
 
+	public boolean create(String fileName) {
+		// /image/product/img001.jpg
+		// 其实完全可以把前面的路径部分截取出来，去找对应的目录
+		synchronized (dirTree) {
+			String[] splitFileName = fileName.split("/");
+			String realFilename = splitFileName[splitFileName.length - 1];
+
+			INodeDirectory parent = dirTree;
+
+			for(int i = 0; i < splitFileName.length - 1; i++) {
+				if(i == 0) {
+					continue;
+				}
+
+				INodeDirectory dir = findDirectory(parent, splitFileName[i]);
+
+				if(dir != null) {
+					parent = dir;
+					continue;
+				}
+
+				INodeDirectory child = new INodeDirectory(splitFileName[i]);
+				parent.addChild(child);
+				parent = child;
+			}
+
+			// 此时就已经获取到了文件的上一级目录
+			// 可以查找一下当前这个目录下面是否有对应的文件了
+			if(existFile(parent, realFilename)) {
+				return false;
+			}
+
+			// 真正的在目录里创建一个文件出来
+			INodeDirectory file = new INodeDirectory(realFilename);
+			parent.addChild(file);
+			return true;
+		}
+	}
+
+	/**
+	 * 目录下是否存在这个文件
+	 * @param dir
+	 * @param filename
+	 * @return
+	 */
+	private Boolean existFile(INodeDirectory dir, String filename) {
+		if(dir.getChildren() != null && dir.getChildren().size() > 0) {
+			for(INodeDirectory child : dir.getChildren()) {
+				if(child.getPath().equals(filename)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * 代表的是文件目录树中的一个节点
@@ -109,14 +164,14 @@ public class FSDirectory {
 	public static class INodeDirectory implements INode {
 		
 		private String path;
-		private List<INode> children;
+		private List<INodeDirectory> children;
 		
 		public INodeDirectory(String path) {
 			this.path = path;
-			this.children = new LinkedList<INode>();
+			this.children = new LinkedList<>();
 		}
 		
-		public void addChild(INode inode) {
+		public void addChild(INodeDirectory inode) {
 			this.children.add(inode);
 		}
 		
@@ -126,10 +181,10 @@ public class FSDirectory {
 		public void setPath(String path) {
 			this.path = path;
 		}
-		public List<INode> getChildren() {
+		public List<INodeDirectory> getChildren() {
 			return children;
 		}
-		public void setChildren(List<INode> children) {
+		public void setChildren(List<INodeDirectory> children) {
 			this.children = children;
 		}
 		

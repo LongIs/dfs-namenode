@@ -177,4 +177,11 @@ public class FSNamesystem {
 	public long getSyncedTxid() {
 		return directory.getFSImageByJson().getMaxTxId();
 	}
+
+	public Boolean create(String filename) throws Exception {
+		if(!directory.create(filename)) {
+			return false;
+		}
+		return true;
+	}
 }

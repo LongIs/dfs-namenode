@@ -61,6 +61,13 @@ public class EditsLogFetcher extends Thread {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    } else if(op.equals("CREATE")) {
+                        String filename = editLog.get("PATH");
+                        try {
+                            fsNamesystem.create(filename);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
 

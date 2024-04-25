@@ -143,6 +143,11 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 		namesystem.setCheckpointTxid(maxTxId);
 	}
 
+	@Override
+	public void create(byte[] file, String fileName) {
+
+	}
+
 	/**
 	 * 从已经刷入磁盘的文件里读取editslog，同时缓存这个文件数据到内存
 	 * @param flushedTxid
