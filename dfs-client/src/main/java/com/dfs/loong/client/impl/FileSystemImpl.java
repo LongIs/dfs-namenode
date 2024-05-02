@@ -3,8 +3,11 @@ package com.dfs.loong.client.impl;
 import com.dfs.loong.client.FileSystem;
 import com.dfs.loong.client.NIOClient;
 import com.dfs.loong.namenode.server.NameNodeFacade;
+import com.dfs.loong.namenode.vo.DataNodeInfo;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class FileSystemImpl implements FileSystem {
@@ -35,7 +38,7 @@ public class FileSystemImpl implements FileSystem {
         // 就是你要考虑自己上传几个副本，找对应副本数量的数据节点的地址
         // 尽可能在分配数据节点的时候，保证每个数据节点放的数据量是比较均衡的
         // 保证集群里各个机器上放的数据比较均衡
-        nameNodeFacade.allocateDataNodes(fileName, fileSize);
+        List<DataNodeInfo> dataNodeInfos = nameNodeFacade.allocateDataNodes(fileName, fileSize);
 
 
         // 依次把文件的副本上传到各个数据节点上去
