@@ -7,12 +7,17 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="dfs-datanode-cebter" />
         <module name="dfs-client" />
         <module name="dsf-namenode-api" />
+        <module name="dfs-datanode-api" />
         <module name="dfs-backupnode" />
         <module name="dsf-namenode-center" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="dfs-datanode-center" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">

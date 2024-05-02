@@ -13,6 +13,8 @@
         <module>dsf-namenode-center</module>
         <module>dfs-client</module>
         <module>dfs-backupnode</module>
+        <module>dfs-datanode-center</module>
+        <module>dfs-datanode-api</module>
     </modules>
 
     <dependencies>

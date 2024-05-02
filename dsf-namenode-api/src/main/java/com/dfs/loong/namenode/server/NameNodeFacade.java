@@ -1,5 +1,6 @@
 package com.dfs.loong.namenode.server;
 
+import com.dfs.loong.namenode.vo.DataNodeInfo;
 import com.dfs.loong.namenode.vo.EditLog;
 
 import java.util.List;
@@ -37,5 +38,7 @@ public interface NameNodeFacade {
 
     void updateCheckpointTxid(Long maxTxId);
 
-    void create(byte[] file, String fileName);
+    Boolean create(String fileName);
+
+    List<DataNodeInfo> allocateDataNodes(String fileNmae, long fileSize);
 }

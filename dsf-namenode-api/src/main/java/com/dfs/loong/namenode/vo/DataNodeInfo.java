@@ -5,12 +5,17 @@ package com.dfs.loong.namenode.vo;
  * @author zhonghuashishan
  *
  */
-public class DataNodeInfo {
+public class DataNodeInfo implements Comparable<DataNodeInfo> {
 
 	private String ip;
 	private String hostname;
 	private long latestHeartbeatTime = System.currentTimeMillis();
-  	
+
+	/**
+	 * 已经存储数据的大小
+	 */
+	private long storedDataSize;
+
 	public DataNodeInfo(String ip, String hostname) {
 		this.ip = ip;
 		this.hostname = hostname;
@@ -34,5 +39,27 @@ public class DataNodeInfo {
 	public void setLatestHeartbeatTime(long latestHeartbeatTime) {
 		this.latestHeartbeatTime = latestHeartbeatTime;
 	}
-	
+
+	@Override
+	public int compareTo(DataNodeInfo o) {
+		if(this.storedDataSize - o.getStoredDataSize() > 0) {
+			return 1;
+		} else if(this.storedDataSize - o.getStoredDataSize() < 0) {
+			return -1;
+		} else {
+			return 0;
+		}
+	}
+
+	public void addStoredDataSize(long storedDataSize) {
+		this.storedDataSize += storedDataSize;
+	}
+
+	public long getStoredDataSize() {
+		return storedDataSize;
+	}
+
+	public void setStoredDataSize(long storedDataSize) {
+		this.storedDataSize = storedDataSize;
+	}
 }

@@ -2,6 +2,7 @@ package com.dfs.loong.namenode.server;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.dfs.loong.namenode.vo.DataNodeInfo;
 import com.dfs.loong.namenode.vo.EditLog;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -144,9 +145,24 @@ public class NameNodeServiceImpl implements NameNodeFacade {
 	}
 
 	@Override
-	public void create(byte[] file, String fileName) {
+	public Boolean create(String fileName) {
+		// 把文件名的查重和创建文件放在一起来执行
+		// 如果说很多个客户端万一同时要发起文件创建，都有一个文件名过来
+		// 多线程并发的情况下，文件名的查重和创建都是正确执行的
+		// 就必须得在同步的代码块来执行这个功能逻辑
+		if(!isRunning) {
+			return Boolean.FALSE;
+		}
 
+		return namesystem.create(fileName);
 	}
+
+	@Override
+	public List<DataNodeInfo> allocateDataNodes(String fileName, long fileSize) {
+		List<DataNodeInfo> datanodes = datanodeManager.allocateDataNodes(fileSize);
+		return datanodes;
+	}
+
 
 	/**
 	 * 从已经刷入磁盘的文件里读取editslog，同时缓存这个文件数据到内存
